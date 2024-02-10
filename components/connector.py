@@ -34,6 +34,9 @@ class Connector:
     def get_rect(self)->pg.Rect:
         return pg.Rect(self.x,self.y,self.size,self.size)
 
+    def get_visibility(self)->bool:
+        return self.visible
+
     def draw(self, screen):
         if not self.visible:return
         pg.draw.rect(screen,(255,255,255),
@@ -54,3 +57,8 @@ class ConnectorManager:
     @staticmethod
     def toggleVisibility(connectors:list[Connector],visible:bool=None):
         for c in connectors:c.toggle_visibility(visible)
+    @staticmethod
+    def collideMouse(connectors:list[Connector]) -> bool:
+        value = any([c.get_visibility() and c.get_rect().collidepoint(*pg.mouse.get_pos()) for c in connectors])
+        print(value)
+        return value

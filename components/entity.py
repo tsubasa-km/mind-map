@@ -38,9 +38,6 @@ class Entity:
     def __repr__(self) -> str:
         return f"{self.text} ({(self.x,self.y)})"
 
-    def __del__(self):
-        ConnectorManager.deleteConnectors(self.connectors)
-
     def move_to_frot(self):
         for i,e in enumerate(Entity.entities):
                 if e is self and i != 0: # 先頭にない場合
@@ -55,7 +52,7 @@ class Entity:
             ConnectorManager.toggleVisibility(self.connectors,True)
 
         if (not rect.collidepoint(*pg.mouse.get_pos()) and
-            Mouse.down()[0] and self._active):
+            Mouse.down()[0] and self._active and not ConnectorManager.collideMouse(self.connectors)):
             self._active = False
             Entity.activated = False
             ConnectorManager.toggleVisibility(self.connectors,False)
