@@ -1,9 +1,14 @@
 import pygame as pg
 from typing import Any
+
+from components.relationship import RelationshipManager
+from util import Mouse
+
 _Entity = Any
 
 class Connector:
     connectors = []
+    target_selecting = False
     def __init__(self,parent_entity:_Entity,direction) -> None:
         self.size = 15
         self.parent_entity = parent_entity
@@ -11,7 +16,8 @@ class Connector:
         self.x:int
         self.y:int
         self.calc_position()
-        self.visible = False
+        self._visible = False
+        self._target_selecting = False
         Connector.connectors.append(self)
 
     def calc_position(self):
@@ -29,16 +35,39 @@ class Connector:
         Args:
             visible (bool, optional): None->反転. Defaults to None.
         """
-        self.visible = visible if visible != None else not self.visible
+        self._visible = visible if visible != None else not self._visible
+
+    def hook_up(self,screen):
+        if (self.get_rect().collidepoint(*pg.mouse.get_pos()) and
+            Mouse.down()[0] and not Connector.target_selecting):
+            self._target_selecting = True
+            Connector.target_selecting = True
+            return
+
+        if self._target_selecting:
+            RelationshipManager.selecting(self, screen)
+
+        if (self.get_rect().collidepoint(*pg.mouse.get_pos()) and
+            Mouse.down()[0] and Connector.target_selecting):
+            for c in Connector.connectors:
+                if not c._target_selecting:continue
+                c._target_selecting = False
+                Connector.target_selecting = False
+                RelationshipManager.createRelationship([self,c])
+                break
+        
+        if (Mouse.down()[2] and self._target_selecting):
+            self._target_selecting = False
+            Connector.target_selecting = False
 
     def get_rect(self)->pg.Rect:
         return pg.Rect(self.x,self.y,self.size,self.size)
 
     def get_visibility(self)->bool:
-        return self.visible
+        return self._visible
 
     def draw(self, screen):
-        if not self.visible:return
+        if not self._visible:return
         pg.draw.rect(screen,(255,255,255),
                     (self.x,self.y,self.size,self.size))
         pg.draw.rect(screen,(0,0,0),
@@ -52,6 +81,7 @@ class ConnectorManager:
     @staticmethod
     def update(screen):
         for c in Connector.connectors:
+            c.hook_up(screen)
             c.calc_position()
             c.draw(screen)
     @staticmethod
@@ -60,5 +90,4 @@ class ConnectorManager:
     @staticmethod
     def collideMouse(connectors:list[Connector]) -> bool:
         value = any([c.get_visibility() and c.get_rect().collidepoint(*pg.mouse.get_pos()) for c in connectors])
-        print(value)
         return value
