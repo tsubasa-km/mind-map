@@ -19,6 +19,23 @@ class Mouse:
     def pressed(cls):
         return copy.deepcopy(pg.mouse.get_pressed())
 
+class Keyboard:
+    _is_pressed = pg.key.ScancodeWrapper([False]*512)
+    @classmethod
+    def update(cls):
+        """毎フレーム最後に更新
+        """
+        cls._is_pressed = copy.deepcopy(pg.key.get_pressed())
+    @classmethod
+    def up(cls):
+        return [b and not a for b,a in zip(cls._is_pressed,pg.key.get_pressed())]
+    @classmethod
+    def down(cls):
+        return [not b and a for b,a in zip(cls._is_pressed,pg.key.get_pressed())]
+    @classmethod
+    def pressed(cls):
+        return copy.deepcopy(pg.key.get_pressed())
+
 def resize_surface(surface:pg.Surface,height=None,width=None)->pg.Surface:
     if height and width:
         value = pg.transform.scale(surface,(width,height))

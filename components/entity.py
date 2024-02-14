@@ -10,6 +10,7 @@ class Entity:
     default_size = 100
     dragged = False
     activated = False
+    edited = False
     def __init__(self,x:int,y:int,text:str="",color:pg.Color|tuple=(180,180,180),size:int=None) -> None:
         """_summary_
 
@@ -59,6 +60,28 @@ class Entity:
 
         if self._active:
             self.move_to_frot()
+    
+    def edit(self):
+        rect = pg.Rect(self.x,self.y,self.size*2,self.size)
+        if (rect.collidepoint(*pg.mouse.get_pos()) and
+            Mouse.down()[2] and not Entity.edited):
+            Entity.edited = True
+            self._editing = True
+        
+        if (not rect.collidepoint(*pg.mouse.get_pos()) and
+            any(Mouse.down()) and self._editing):
+            Entity.edited = False
+            self._editing = False
+    
+    def insert(self, event:pg.event.Event):
+        if self._editing:
+            if event.key == pg.K_BACKSPACE:
+                self.text = self.text[:-1]
+            elif event.key == pg.K_RETURN:
+                Entity.edited = False
+                self._editing = False
+            else:
+                self.text+=event.unicode
 
     def drag(self):
         rect = pg.Rect(self.x,self.y,self.size*2,self.size)
@@ -89,7 +112,7 @@ class Entity:
                     self.y+(self.size//2-text.get_size()[1]//2)]
         screen.blit(text,text_pos)
         pointer_pos = [s+t for s,t in zip([text.get_width()+2,0],text_pos)]
-        if self._editing and time()%2 <= 1:
+        if self._editing and time()%1 <= 0.8:
             pg.draw.rect(screen,(100,100,100),pointer_pos+[3,text.get_height()])
 
 
@@ -98,9 +121,13 @@ class EntityManager:
     def createEntity(*args, **kwargs):
         Entity(*args, **kwargs)
     @staticmethod
+    def insert(string:str):
+        [e.insert(string) if e._editing else None for e in Entity.entities]
+    @staticmethod
     def update(screen):
         for e in Entity.entities:
             e.activate()
             e.drag()
+            e.edit()
         for e in Entity.entities[::-1]:
             e.draw(screen)

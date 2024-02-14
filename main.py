@@ -11,8 +11,6 @@ class Main:
     def __init__(self) -> None:
         pg.init()
         self.screen = pg.display.set_mode(self.SCREEN_SIZE)
-        EntityManager.createEntity(100,200,"テスト")
-        EntityManager.createEntity(100,400,"テスト")
         while True:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -21,7 +19,9 @@ class Main:
                 if event.type == pg.KEYDOWN:
                     if (event.key == pg.K_n and
                         pg.key.get_mods() & pg.KMOD_CTRL):
-                        EntityManager.createEntity(*pg.mouse.get_pos(),"テスト")
+                        EntityManager.createEntity(*pg.mouse.get_pos(),"")
+                    if (Entity.edited):
+                        EntityManager.insert(event)
             self.loop()
             Mouse.update()
             pg.display.update()
